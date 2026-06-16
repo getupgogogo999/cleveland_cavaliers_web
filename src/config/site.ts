@@ -21,46 +21,50 @@ export const NAV_LINKS = [
 ];
 
 export interface CarouselSlide {
-  image: string;
   title: string;
   subtitle: string;
   link?: string;
+  /** Wide landscape photo URL */
+  image?: string;
+  /** Brand slide: gradient + logo, no photo */
+  variant?: 'photo' | 'brand';
 }
 
-export const DEFAULT_CAROUSEL_SLIDES: CarouselSlide[] = [
+/** Curated wide images — no player headshot crops */
+export const CAROUSEL_SLIDES: CarouselSlide[] = [
   {
-    image:
-      'https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/3908809.png&w=1600&h=900&scale=crop&location=center',
-    title: 'Donovan Mitchell',
-    subtitle: '骑士队当家球星 · 季后赛关键先生',
-    link: '/players',
+    variant: 'brand',
+    title: 'CAVS NATION',
+    subtitle: '克利夫兰骑士队 · Wine & Gold 荣耀传承',
+    link: ROUTES.history,
   },
   {
-    image:
-      'https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/4432158.png&w=1600&h=900&scale=crop&location=center',
-    title: 'Evan Mobley',
-    subtitle: '全能锋线 · 防守核心',
-    link: '/players',
+    variant: 'photo',
+    image: 'https://img.youtube.com/vi/4gdYH5wgTc4/maxresdefault.jpg',
+    title: '季后赛高光',
+    subtitle: 'Game 7 客场力克活塞 · 挺进东决',
+    link: ROUTES.videos,
   },
   {
-    image:
-      'https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/4066328.png&w=1600&h=900&scale=crop&location=center',
-    title: 'Jarrett Allen',
-    subtitle: '内线支柱 · 高效终结',
-    link: '/players',
+    variant: 'photo',
+    image: 'https://img.youtube.com/vi/ySSWyYd0em8/maxresdefault.jpg',
+    title: 'All-Access 纪录片',
+    subtitle: '走进骑士队更衣室与训练日常',
+    link: ROUTES.videos,
   },
   {
-    image: 'https://a.espncdn.com/i/teamlogos/nba/500/cle.png',
-    title: '2016 NBA 总冠军',
-    subtitle: 'Cleveland, this is for you! · Wine & Gold Forever',
-    link: '/history',
-  },
-  {
+    variant: 'photo',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Rocket_Mortgage_FieldHouse_%28Cleveland%29.jpg/1280px-Rocket_Mortgage_FieldHouse_%28Cleveland%29.jpg',
-    title: 'Rocket Mortgage FieldHouse',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Rocket_Mortgage_FieldHouse_%28Cleveland%29.jpg/1920px-Rocket_Mortgage_FieldHouse_%28Cleveland%29.jpg',
+    title: 'Rocket Arena',
     subtitle: '克利夫兰主场 · 球迷的第六人',
-    link: '/games',
+    link: ROUTES.games,
+  },
+  {
+    variant: 'brand',
+    title: '2016 NBA CHAMPIONS',
+    subtitle: 'Cleveland, this is for you!',
+    link: ROUTES.history,
   },
 ];
 

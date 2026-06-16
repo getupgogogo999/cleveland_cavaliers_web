@@ -9,9 +9,9 @@ interface RecordSectionProps {
 
 export default function RecordSection({ record, games }: RecordSectionProps) {
   const completed = games.filter((g) => g.result !== 'upcoming');
-  const wins = completed.filter((g) => g.result === 'W').length;
-  const losses = completed.filter((g) => g.result === 'L').length;
   const lastFive = completed.slice(0, 5);
+  const lastFiveWins = lastFive.filter((g) => g.result === 'W').length;
+  const lastFiveLosses = lastFive.filter((g) => g.result === 'L').length;
 
   return (
     <section id="record" className="py-20 relative">
@@ -55,8 +55,8 @@ export default function RecordSection({ record, games }: RecordSectionProps) {
               {[
                 { icon: TrendingUp, label: '胜率', value: `${record.winPct}`, color: 'text-green-400' },
                 { icon: Calendar, label: '已赛场次', value: completed.length, color: 'text-cavs-gold' },
-                { icon: TrendingUp, label: '近5场胜', value: wins, color: 'text-green-400' },
-                { icon: TrendingDown, label: '近5场负', value: losses, color: 'text-red-400' },
+                { icon: TrendingUp, label: '近5场胜', value: lastFiveWins, color: 'text-green-400' },
+                { icon: TrendingDown, label: '近5场负', value: lastFiveLosses, color: 'text-red-400' },
               ].map((item) => (
                 <div key={item.label} className="text-center">
                   <item.icon className={`w-6 h-6 mx-auto mb-2 ${item.color}`} />

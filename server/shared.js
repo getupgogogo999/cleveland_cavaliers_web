@@ -154,47 +154,7 @@ function parseRecord(teamData) {
   };
 }
 
-function parseGames(scheduleData) {
-  const events = scheduleData?.events ?? [];
-  const now = Date.now();
-  return events
-    .slice(0, 20)
-    .map((event) => {
-      const comp = event.competitions?.[0];
-      if (!comp) return null;
-      const competitors = comp.competitors ?? [];
-      const cavs = competitors.find((c) => c.team?.abbreviation === 'CLE');
-      const opp = competitors.find((c) => c.team?.abbreviation !== 'CLE');
-      if (!cavs || !opp) return null;
-      const oppTeam = opp.team ?? {};
-      const isHome = cavs.homeAway === 'home';
-      const cavsScore = cavs.score != null ? Number(cavs.score) : undefined;
-      const oppScore = opp.score != null ? Number(opp.score) : undefined;
-      const eventDate = new Date(event.date).getTime();
-      const isPast = eventDate < now && cavsScore !== undefined;
-      let result = 'upcoming';
-      if (isPast && cavsScore !== undefined && oppScore !== undefined) {
-        result = cavsScore > oppScore ? 'W' : 'L';
-      }
-      const scoreStr =
-        cavsScore !== undefined && oppScore !== undefined
-          ? `${cavsScore} - ${oppScore}`
-          : new Date(event.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
-      return {
-        id: String(event.id),
-        date: event.date,
-        opponent: String(oppTeam.displayName ?? oppTeam.name),
-        opponentLogo: String(oppTeam.logos?.[0]?.href ?? oppTeam.logo ?? ''),
-        homeAway: isHome ? 'home' : 'away',
-        result,
-        score: scoreStr,
-        cavsScore,
-        oppScore,
-      };
-    })
-    .filter(Boolean)
-    .slice(0, 10);
-}
+import { parseGamesFromSchedule } from './parse-games.js';
 
 function parseNews(newsData) {
   return (newsData?.articles ?? []).slice(0, 6).map((a) => ({
@@ -230,7 +190,7 @@ export async function getBootstrap() {
   const teamInfo = teamData?.team ?? {};
   const bootstrap = {
     team: teamData ? parseRecord(teamData) : { wins: 0, losses: 0, winPct: '—', streak: '—', standing: '—', conference: 'Eastern Conference' },
-    recentGames: scheduleData ? parseGames(scheduleData) : [],
+    recentGames: scheduleData ? parseGamesFromSchedule(scheduleData) : [],
     players,
     videos: fetchedVideos,
     news: parseNews(newsData),
