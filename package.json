@@ -10,7 +10,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "vite",
     "dev:server": "node server/index.js",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/generate-player-data.mjs",
     "preview": "node server/index.js",
     "start": "node server/index.js",
     "start:local": "npm run build && node server/index.js"

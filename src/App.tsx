@@ -24,7 +24,7 @@ function LoadingScreen() {
         LOADING CAVS...
       </p>
       <p className="mt-2 text-sm text-cavs-cream/40" style={{ color: '#F5F0E8' }}>
-        正在加载，首次打开可能需要 30 秒
+        正在加载…
       </p>
     </div>
   );

@@ -11,6 +11,8 @@ import {
   getPlayerStats,
   getVideos,
   getNews,
+  getBootstrap,
+  warmCache,
 } from './shared.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -19,6 +21,15 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors({ origin: process.env.NODE_ENV === 'production' ? false : true }));
 app.use(express.json());
+
+app.get('/api/bootstrap', async (_req, res) => {
+  try {
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    res.json(await getBootstrap());
+  } catch {
+    res.status(500).json({ error: 'Service temporarily unavailable' });
+  }
+});
 
 app.get('/api/team', async (_req, res) => {
   try {
@@ -95,4 +106,5 @@ if (fs.existsSync(distPath)) {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Cavs Nation server running at http://0.0.0.0:${PORT}`);
+  warmCache();
 });
