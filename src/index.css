@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cavs-navy text-cavs-cream font-body antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-cavs-navy;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-cavs-wine rounded-full;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl;
+  }
+
+  .gold-gradient-text {
+    @apply bg-gradient-to-r from-cavs-gold to-cavs-gold-light bg-clip-text text-transparent;
+  }
+
+  .section-title {
+    @apply font-display text-3xl md:text-4xl font-bold tracking-wide uppercase;
+  }
+
+  .stat-value {
+    @apply font-display text-4xl md:text-5xl font-bold text-cavs-gold;
+  }
+}
