@@ -3,12 +3,29 @@ const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba'
 const ESPN_STATS =
   'https://site.api.espn.com/apis/common/v3/sports/basketball/nba/athletes';
 
-async function fetchJson(url) {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'CavsNation/1.0 (fan site)' },
-  });
-  if (!res.ok) throw new Error(`Fetch failed: ${url} (${res.status})`);
-  return res.json();
+const cache = new Map();
+
+async function withCache(key, ttlMs, fn) {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.time < ttlMs) return hit.data;
+  const data = await fn();
+  cache.set(key, { data, time: Date.now() });
+  return data;
+}
+
+async function fetchJson(url, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'CavsNation/1.0 (fan site)' },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`Fetch failed: ${url} (${res.status})`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function fetchText(url) {
@@ -127,16 +144,17 @@ function parseAthleteStats(statsData) {
 }
 
 async function fetchPlayerStats(athletes) {
-  const active = athletes.filter((a) => a.status?.type !== 'inactive').slice(0, 16);
+  const active = athletes.filter((a) => a.status?.type !== 'inactive').slice(0, 10);
 
-  const results = await Promise.all(
+  const results = await Promise.allSettled(
     active.map(async (ath) => {
       const headshot = ath.headshot?.href ?? '';
       const position = ath.position?.abbreviation ?? '—';
 
       try {
         const statsData = await fetchJson(
-          `${ESPN_STATS}/${ath.id}/stats?season=2025&seasontype=2`
+          `${ESPN_STATS}/${ath.id}/stats?season=2025&seasontype=2`,
+          10000
         );
         const stats = parseAthleteStats(statsData);
 
@@ -171,39 +189,51 @@ async function fetchPlayerStats(athletes) {
     })
   );
 
-  return results.filter((p) => p.gamesPlayed > 0 || p.ppg > 0).sort((a, b) => b.ppg - a.ppg);
+  return results
+    .filter((r) => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .filter((p) => p.gamesPlayed > 0 || p.ppg > 0)
+    .sort((a, b) => b.ppg - a.ppg);
 }
 
 export async function getTeam() {
-  return fetchJson(`${ESPN_BASE}/teams/cle`);
+  return withCache('team', 5 * 60 * 1000, () => fetchJson(`${ESPN_BASE}/teams/cle`));
 }
 
 export async function getSchedule() {
-  return fetchJson(`${ESPN_BASE}/teams/cle/schedule`);
+  return withCache('schedule', 5 * 60 * 1000, () => fetchJson(`${ESPN_BASE}/teams/cle/schedule`));
 }
 
 export async function getStandings() {
-  return fetchJson('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings');
+  return withCache('standings', 10 * 60 * 1000, () =>
+    fetchJson('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings')
+  );
 }
 
 export async function getRoster() {
-  return fetchJson(`${ESPN_BASE}/teams/cle/roster`);
+  return withCache('roster', 30 * 60 * 1000, () => fetchJson(`${ESPN_BASE}/teams/cle/roster`));
 }
 
 export async function getPlayerStats() {
-  const roster = await getRoster();
-  return fetchPlayerStats(roster.athletes ?? []);
+  return withCache('player-stats', 15 * 60 * 1000, async () => {
+    const roster = await getRoster();
+    return fetchPlayerStats(roster.athletes ?? []);
+  });
 }
 
 export async function getVideos() {
-  try {
-    return await fetchYouTubeVideos();
-  } catch {
-    return getFallbackVideos();
-  }
+  return withCache('videos', 10 * 60 * 1000, async () => {
+    try {
+      return await fetchYouTubeVideos();
+    } catch {
+      return getFallbackVideos();
+    }
+  });
 }
 
 export async function getNews() {
-  const data = await fetchJson(`${ESPN_BASE}/news`);
-  return { articles: (data.articles ?? []).slice(0, 6) };
+  return withCache('news', 5 * 60 * 1000, async () => {
+    const data = await fetchJson(`${ESPN_BASE}/news`);
+    return { articles: (data.articles ?? []).slice(0, 6) };
+  });
 }

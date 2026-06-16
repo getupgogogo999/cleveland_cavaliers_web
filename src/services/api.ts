@@ -9,10 +9,16 @@ import type {
 
 const API = '/api';
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`);
-  if (!res.ok) throw new Error(`API error: ${path}`);
-  return res.json();
+async function get<T>(path: string, timeoutMs = 20000): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API}${path}`, { signal: controller.signal });
+    if (!res.ok) throw new Error(`API error: ${path}`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function parseRecord(teamData: Record<string, unknown>): TeamRecord {
@@ -128,11 +134,10 @@ function parseNews(newsData: Record<string, unknown>): NewsItem[] {
   }));
 }
 
-export async function fetchAppData(): Promise<AppData> {
-  const [teamData, scheduleData, playerStats, videos, newsData] = await Promise.all([
+export async function fetchCoreData(): Promise<AppData> {
+  const [teamData, scheduleData, videos, newsData] = await Promise.all([
     get<Record<string, unknown>>('/team'),
     get<Record<string, unknown>>('/schedule'),
-    get<Array<Record<string, unknown>>>('/player-stats'),
     get<YouTubeVideo[]>('/videos'),
     get<Record<string, unknown>>('/news').catch(() => ({ articles: [] })),
   ]);
@@ -143,7 +148,7 @@ export async function fetchAppData(): Promise<AppData> {
   return {
     team: parseRecord(teamData),
     recentGames: parseGames(scheduleData),
-    players: parsePlayers(playerStats),
+    players: [],
     videos,
     news: parseNews(newsData),
     teamName: String(teamInfo.displayName ?? 'Cleveland Cavaliers'),
@@ -155,6 +160,22 @@ export async function fetchAppData(): Promise<AppData> {
         ?.fullName ?? 'Rocket Mortgage FieldHouse'
     ),
   };
+}
+
+export async function fetchPlayerStatsData(): Promise<Player[]> {
+  const raw = await get<Array<Record<string, unknown>>>('/player-stats', 45000);
+  return parsePlayers(raw);
+}
+
+/** @deprecated use fetchCoreData + fetchPlayerStatsData */
+export async function fetchAppData(): Promise<AppData> {
+  const core = await fetchCoreData();
+  try {
+    const players = await fetchPlayerStatsData();
+    return { ...core, players };
+  } catch {
+    return core;
+  }
 }
 
 export async function fetchVideos(): Promise<YouTubeVideo[]> {

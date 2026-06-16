@@ -78,7 +78,16 @@ app.get('/api/news', async (_req, res) => {
 
 const distPath = path.join(__dirname, '..', 'dist');
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use(
+    express.static(distPath, {
+      maxAge: '1d',
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+      },
+    })
+  );
   app.get('*', (_req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });

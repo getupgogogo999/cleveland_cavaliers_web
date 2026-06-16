@@ -12,13 +12,20 @@ import VideosPage from './pages/VideosPage';
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-cavs-navy">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center bg-cavs-navy"
+      style={{ background: '#041E42', color: '#FFB81C', fontFamily: 'system-ui, sans-serif' }}
+    >
       <div className="relative">
         <div className="w-20 h-20 rounded-full border-4 border-cavs-wine border-t-cavs-gold animate-spin" />
         <Loader2 className="absolute inset-0 m-auto w-8 h-8 text-cavs-gold animate-pulse" />
       </div>
-      <p className="mt-6 font-display text-xl text-cavs-gold tracking-widest">LOADING CAVS...</p>
-      <p className="mt-2 text-sm text-cavs-cream/40">正在拉取战绩与视频数据</p>
+      <p className="mt-6 font-display text-xl text-cavs-gold tracking-widest" style={{ color: '#FFB81C' }}>
+        LOADING CAVS...
+      </p>
+      <p className="mt-2 text-sm text-cavs-cream/40" style={{ color: '#F5F0E8' }}>
+        正在加载，首次打开可能需要 30 秒
+      </p>
     </div>
   );
 }
@@ -41,10 +48,10 @@ function ErrorScreen({ message, onRetry }: { message: string; onRetry: () => voi
 }
 
 function AppRoutes() {
-  const { data, loading, error, reload } = useData();
+  const { loading, error, reload } = useData();
 
   if (loading) return <LoadingScreen />;
-  if (error || !data) return <ErrorScreen message={error ?? '未知错误'} onRetry={reload} />;
+  if (error) return <ErrorScreen message={error} onRetry={reload} />;
 
   return (
     <Routes>
